@@ -318,6 +318,51 @@ pub fn account_to_id_bytes(account: &str) -> Vec<u8> {
     util::hex_to_bytes(account_id).unwrap().to_vec()
 }
 
+pub fn gen_record_types() -> RecordTypes {
+    let data = vec![
+        (
+            "profile",
+            vec![
+                "twitter",
+                "facebook",
+                "reddit",
+                "linkedin",
+                "github",
+                "telegram",
+                "description",
+                "avatar",
+                "email",
+                "phone",
+            ],
+        ),
+        (
+            "address",
+            vec![
+                "btc", "eth", "ckb", "bch", "ltc", "doge", "xrp", "dot", "fil", "trx", "eos",
+                "iota", "xmr", "bsc", "heco", "xem", "etc", "dash", "zec", "zil", "flow", "iost",
+                "sc", "near", "ksm", "atom", "xtz", "bsv", "sol", "vet", "xlm", "ada",
+            ],
+        ),
+        ("custom_keys", Vec::new()),
+    ];
+
+    let mut record_types_builder = RecordTypes::new_builder();
+    for (type_name, key_names) in data {
+        let mut record_keys_builder = RecordKeys::new_builder();
+        for key_name in key_names {
+            record_keys_builder = record_keys_builder.push(Bytes::from(key_name.as_bytes()))
+        }
+
+        let record_type = RecordType::new_builder()
+            .type_name(Bytes::from(type_name.as_bytes()))
+            .keys(record_keys_builder.build())
+            .build();
+        record_types_builder = record_types_builder.push(record_type)
+    }
+
+    record_types_builder.build()
+}
+
 fn bytes_to_hex(input: Bytes) -> String {
     "0x".to_string() + &hex_string(input.as_reader().raw_data()).unwrap()
 }
@@ -604,28 +649,6 @@ impl TemplateGenerator {
         (cell_data, entity)
     }
 
-    fn gen_config_cell_bloom_filter(&mut self) -> (Bytes, Vec<u8>) {
-        let mut bf = BloomFilter::new(BLOOM_FILTER_M, BLOOM_FILTER_K);
-        bf.insert(b"google");
-        bf.insert(b"apple");
-        bf.insert(b"microsoft");
-        bf.insert(b"qq");
-        bf.insert(b"ali");
-        bf.insert(b"baidu");
-        bf.insert(b"das");
-        let mut entity = bf.export_bit_u8();
-
-        // Prepend length of bytes to bloom filter data, 4 bytes is the length of first u32.
-        let mut length = (entity.len() as u32 + 4).to_le_bytes().to_vec();
-        length.extend(entity);
-        entity = length;
-
-        // Generate the cell structure of ConfigCell.
-        let cell_data = Bytes::from(blake2b_256(entity.as_slice()).to_vec());
-
-        (cell_data, entity)
-    }
-
     fn gen_config_cell_market(&mut self) -> (Bytes, ConfigCellMarket) {
         let primary_market_config = MarketConfig::new_builder()
             .max_auction_waiting(Uint32::from(86400))
@@ -643,6 +666,28 @@ impl TemplateGenerator {
             .primary_market(primary_market_config)
             .secondary_market(secondary_market_config)
             .build();
+
+        // Generate the cell structure of ConfigCell.
+        let cell_data = Bytes::from(blake2b_256(entity.as_slice()).to_vec());
+
+        (cell_data, entity)
+    }
+
+    fn gen_config_cell_bloom_filter(&mut self) -> (Bytes, Vec<u8>) {
+        let mut bf = BloomFilter::new(BLOOM_FILTER_M, BLOOM_FILTER_K);
+        bf.insert(b"google");
+        bf.insert(b"apple");
+        bf.insert(b"microsoft");
+        bf.insert(b"qq");
+        bf.insert(b"ali");
+        bf.insert(b"baidu");
+        bf.insert(b"das");
+        let mut entity = bf.export_bit_u8();
+
+        // Prepend length of bytes to bloom filter data, 4 bytes is the length of first u32.
+        let mut length = (entity.len() as u32 + 4).to_le_bytes().to_vec();
+        length.extend(entity);
+        entity = length;
 
         // Generate the cell structure of ConfigCell.
         let cell_data = Bytes::from(blake2b_256(entity.as_slice()).to_vec());
@@ -673,11 +718,7 @@ impl TemplateGenerator {
                 )
             }
             ConfigID::ConfigCellRecord => {
-                let (cell_data, entity) = self.gen_config_cell_record();
-                (
-                    cell_data,
-                    das_util::wrap_entity_witness(DataType::ConfigCellRecord, entity),
-                )
+                panic!("not implemented");
             }
             ConfigID::ConfigCellMarket => {
                 let (cell_data, entity) = self.gen_config_cell_market();
