@@ -900,21 +900,24 @@ fn verify_proposal_execution_result(
         expected_proposer_profit += 6_100_000_000;
     }
 
+    // The keeper who create proposal and confirm proposal maybe the same one, so more than one outputs is allowed.
     assert!(
-        proposer_wallet_cells.len() == 1,
+        proposer_wallet_cells.len() >= 1,
         Error::ProposalConfirmWalletBalanceError,
         "There should be 1 output with proposer lock, but {} found.",
         proposer_wallet_cells.len()
     );
 
-    let proposer_current_profit =
-        load_cell_capacity(proposer_wallet_cells[0], Source::Output).map_err(|e| Error::from(e))?;
+    let mut proposer_current_profit = 0;
+    for index in proposer_wallet_cells {
+        proposer_current_profit +=
+            load_cell_capacity(index, Source::Output).map_err(|e| Error::from(e))?;
+    }
 
     assert!(
-        expected_proposer_profit == proposer_current_profit,
+        expected_proposer_profit <= proposer_current_profit,
         Error::ProposalConfirmWalletBalanceError,
-        "Outputs[{}] should has greater than or equal to expected capacity. (expected: {}, current: {})",
-        proposer_wallet_cells[0],
+        "Outputs should has greater than or equal to expected capacity. (expected: {}, current: {})",
         expected_proposer_profit,
         proposer_current_profit
     );
@@ -941,7 +944,7 @@ fn verify_proposal_execution_result(
         load_cell_capacity(das_wallet_cells[0], Source::Output).map_err(|e| Error::from(e))?;
 
     assert!(
-        expected_profit == current_profit,
+        expected_profit <= current_profit,
         Error::ProposalConfirmWalletBalanceError,
         "Outputs[{}] should has greater than or equal to expected capacity. (expected: {}, current: {})",
         das_wallet_cells[0],
