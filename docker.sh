@@ -82,7 +82,9 @@ function build() {
             "cp /code/target/riscv64imac-unknown-none-elf/debug/${contract} /code/build/debug/"
     fi
 
-    exit $?
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
 }
 
 function build_all() {

@@ -891,6 +891,7 @@ fn verify_proposal_execution_result(
     debug!("Check if the profit of proposer has been transfered correctly.");
 
     let mut expected_proposer_profit = wallet.get_balance(&PROPOSAL_CREATOR_WALLET_ID).unwrap();
+    let original_expected_proposer_profit = expected_proposer_profit;
     let proposer_lock: ckb_packed::Script =
         proposal_cell_data_reader.proposer_lock().to_entity().into();
     let proposer_wallet_cells =
@@ -904,7 +905,7 @@ fn verify_proposal_execution_result(
     assert!(
         proposer_wallet_cells.len() >= 1,
         Error::ProposalConfirmWalletBalanceError,
-        "There should be 1 output with proposer lock, but {} found.",
+        "There should be more than 1 output with proposer lock, but {} found.",
         proposer_wallet_cells.len()
     );
 
@@ -929,7 +930,7 @@ fn verify_proposal_execution_result(
     let das_wallet_cells =
         util::find_cells_by_script(ScriptType::Lock, &das_wallet_lock, Source::Output)?;
 
-    if expected_proposer_profit < 6_100_000_000 {
+    if original_expected_proposer_profit < 6_100_000_000 {
         expected_profit -= 6_100_000_000;
     }
 
