@@ -486,6 +486,14 @@ pub fn load_das_witnesses(data_types_opt: Option<Vec<DataType>>) -> Result<Witne
                             let mut buf = [0u8; 16000];
                             data = load_witness(&mut buf, i)?;
                         }
+                        x if x <= 32000 => {
+                            let mut buf = [0u8; 32000];
+                            data = load_witness(&mut buf, i)?;
+                        }
+                        x if x <= 64000 => {
+                            let mut buf = [0u8; 64000];
+                            data = load_witness(&mut buf, i)?;
+                        }
                         _ => {
                             return Err(Error::from(SysError::LengthNotEnough(actual_size)));
                         }
