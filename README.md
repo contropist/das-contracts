@@ -80,7 +80,7 @@ cargo test -p tests challenge_ # all the tests start with challenge_ are abnorma
 
 ### Documents
 
-- For details about price, preserved accounts and so on, please see: https://docs.da.systems/docs/v/English/
+- For details about price, preserved accounts and so on, please see: https://docs.da.systems/docs/
 - To learn more about data structures, protocols and other technical details, please see documents in [docs/](docs) directory of this repository.
 - It's a good idea to start with their RFCs to learn more about all aspects of CKB: https://github.com/nervosnetwork/rfcs
 - Other things may help you a lot when develop contracts:
